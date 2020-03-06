@@ -1,4 +1,5 @@
 import React from 'react';
+import moment from 'moment';
 import './App.css';
 import {
   Container,
@@ -24,31 +25,30 @@ type Task = {
   priority: number,
   createdAt: string,
   completeAt: string,
+  duration: any,
   isCompleted: boolean
-};
-
-const getFormattedDate = (value: string) => {
-  const formatter = new Intl.DateTimeFormat('ru-RU', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  });
-
-  const formattedValue = formatter.format(Date.parse(value));
-
-  return formattedValue;
 };
 
 class App extends React.Component {
   state = {
     tasks: new Array<Task>()
-  };
+  }
 
   async componentDidMount() {
     const response = await fetch('http://localhost:5000/api/tasks');
-    const tasks = await response.json();
+    const tasks: Array<Task> = await response.json();
 
-    this.setState({ tasks });
+    this.setState({
+      ...this.state, tasks: tasks.map(t => {
+        const now = moment();
+        const completeAtMoment = moment(t.completeAt);
+        const duration = moment.duration(completeAtMoment.diff(now), 'milliseconds');
+
+        t.duration = duration;
+
+        return t;
+      })
+    });
   }
 
   addTask() {
@@ -86,33 +86,36 @@ class App extends React.Component {
             </TableHead>
             <TableBody>
               {!this.hasTasks() &&
-                [...Array(5)].map((v, i) => (
-                  <TableRow key={i}>
-                    <TableCell colSpan={6}>
-                      <Skeleton variant="text" />
-                    </TableCell>
-                  </TableRow>)
+                [...Array(5)].map((v, i) =>
+                  (
+                    <TableRow key={i}>
+                      <TableCell colSpan={6}>
+                        <Skeleton variant="text" />
+                      </TableCell>
+                    </TableRow>)
                 )
               }
-              {this.hasTasks() && tasks.map(t => (
-                <TableRow key={t.name}>
-                  <TableCell component="th" scope="row">{t.name}</TableCell>
-                  <TableCell align="center">{t.priority}</TableCell>
-                  <TableCell align="center">
-                    {getFormattedDate(t.createdAt)}
-                  </TableCell>
-                  <TableCell align="center">
-                    {getFormattedDate(t.completeAt)}
-                  </TableCell>
-                  <TableCell align="center">
-                    <Chip label={t.isCompleted ? 'Completed' : 'Active'} />
-                  </TableCell>
-                  <TableCell align="center">
-                    {t.isCompleted && <Button>Remove</Button>}
-                    {!t.isCompleted && <Button>Complete</Button>}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {this.hasTasks() && tasks.map(t => {
+                return (
+                  <TableRow key={t.name}>
+                    <TableCell component="th" scope="row">{t.name}</TableCell>
+                    <TableCell align="center">{t.priority}</TableCell>
+                    <TableCell align="center">
+                      {moment(t.createdAt).format('L')}
+                    </TableCell>
+                    <TableCell align="center">
+                      {moment(t.completeAt).format('L')}{t.duration.humanize(true)}
+                    </TableCell>
+                    <TableCell align="center">
+                      <Chip label={t.isCompleted ? 'Completed' : 'Active'} />
+                    </TableCell>
+                    <TableCell align="center">
+                      {t.isCompleted && <Button>Remove</Button>}
+                      {!t.isCompleted && <Button>Complete</Button>}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </TableContainer >
