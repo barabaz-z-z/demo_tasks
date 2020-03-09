@@ -42,13 +42,26 @@ class App extends React.Component {
       ...this.state, tasks: tasks.map(t => {
         const now = moment();
         const completeAtMoment = moment(t.completeAt);
-        const duration = moment.duration(completeAtMoment.diff(now), 'milliseconds');
+        const duration = moment.duration(now.diff(completeAtMoment), 's');
 
         t.duration = duration;
 
         return t;
       })
     });
+
+    // TODO: get an intervalId to remove the interval when countdown reaches 0
+    // TODO: do not apply an interval for big duration when a lot of days etc
+
+    setInterval(() => {
+      this.setState({
+        ...this.state, tasks: tasks.map(t => {
+          t.duration = t.duration.subtract(1, 'second');
+
+          return t;
+        })
+      });
+    }, 1000);
   }
 
   addTask() {
@@ -104,7 +117,7 @@ class App extends React.Component {
                       {moment(t.createdAt).format('L')}
                     </TableCell>
                     <TableCell align="center">
-                      {moment(t.completeAt).format('L')}{t.duration.humanize(true)}
+                      {`${t.duration.hours()}:${t.duration.minutes()}:${t.duration.seconds()}`}
                     </TableCell>
                     <TableCell align="center">
                       <Chip label={t.isCompleted ? 'Completed' : 'Active'} />
