@@ -10,24 +10,14 @@ import {
   TableHead,
   TableCell,
   TableBody,
-  Button,
-  Chip,
   Toolbar,
   Fab,
   Typography,
 } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import Skeleton from '@material-ui/lab/Skeleton';
-
-type Task = {
-  id: number,
-  name: string,
-  priority: number,
-  createdAt: string,
-  completeAt: string,
-  duration: any,
-  isCompleted: boolean
-};
+import { Task } from './models/Task';
+import { TableTaskRow } from './components/table-task-row';
 
 class App extends React.Component {
   state = {
@@ -99,7 +89,7 @@ class App extends React.Component {
             </TableHead>
             <TableBody>
               {!this.hasTasks() &&
-                [...Array(5)].map((v, i) =>
+                [...Array(5)].map((_, i) =>
                   (
                     <TableRow key={i}>
                       <TableCell colSpan={6}>
@@ -109,25 +99,7 @@ class App extends React.Component {
                 )
               }
               {this.hasTasks() && tasks.map(t => {
-                return (
-                  <TableRow key={t.name}>
-                    <TableCell component="th" scope="row">{t.name}</TableCell>
-                    <TableCell align="center">{t.priority}</TableCell>
-                    <TableCell align="center">
-                      {moment(t.createdAt).format('L')}
-                    </TableCell>
-                    <TableCell align="center">
-                      {`${t.duration.hours()}:${t.duration.minutes()}:${t.duration.seconds()}`}
-                    </TableCell>
-                    <TableCell align="center">
-                      <Chip label={t.isCompleted ? 'Completed' : 'Active'} />
-                    </TableCell>
-                    <TableCell align="center">
-                      {t.isCompleted && <Button>Remove</Button>}
-                      {!t.isCompleted && <Button>Complete</Button>}
-                    </TableCell>
-                  </TableRow>
-                );
+                return (<TableTaskRow key={t.name} task={t}></TableTaskRow>);
               })}
             </TableBody>
           </Table>
