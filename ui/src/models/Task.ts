@@ -1,3 +1,5 @@
+import { TaskStatus } from './TaskStatus';
+
 export type Task = {
     id: number;
     name: string;
@@ -5,5 +7,5 @@ export type Task = {
     createdAt: string;
     completeAt: string;
     duration: any;
-    isCompleted: boolean;
+    status: TaskStatus;
 };
