@@ -9,6 +9,6 @@ namespace Tasks.Core
         public int Priority { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime CompleteAt { get; set; }
-        public bool IsCompleted { get; set; }
+        public int Status { get; set; }
     }
 }
