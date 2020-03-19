@@ -7,15 +7,35 @@ import {
     TableRow,
     TableCell,
     TableBody,
-    Table
+    Table,
+    Toolbar,
+    Fab,
+    Typography
 } from '@material-ui/core';
+import Skeleton from '@material-ui/lab/Skeleton';
+import AddIcon from '@material-ui/icons/Add';
 import { TableTaskRow } from './table-task-row';
 import { Task } from '../models/Task';
 import { TaskStatus } from '../models/TaskStatus';
-import Skeleton from '@material-ui/lab/Skeleton';
+import { AddTaskModal } from './add-task-modal';
+
+const prepareTask = (task: Task) => {
+    const now = moment();
+    const completeAtMoment = moment(task.completeAt);
+    const duration = moment.duration(completeAtMoment.diff(now), 'seconds');
+
+    task.duration = moment.duration(0);
+
+    if (duration.seconds() > 0) {
+        task.duration = duration;
+    }
+
+    return task;
+};
 
 export class TaskTable extends React.Component {
     state = {
+        isOpened: false,
         tasks: {
             activeAndCompleted: new Array<Task>(),
             removed: new Array<Task>()
@@ -30,22 +50,7 @@ export class TaskTable extends React.Component {
 
         this.setState({
             tasks: {
-                activeAndCompleted: restTasks.map(t => {
-                    const now = moment();
-                    const completeAtMoment = moment(t.completeAt);
-                    const duration = moment.duration(
-                        now.diff(completeAtMoment),
-                        's'
-                    );
-
-                    t.duration = moment.duration(0);
-
-                    if (duration.seconds() > 0) {
-                        t.duration = duration;
-                    }
-
-                    return t;
-                }),
+                activeAndCompleted: restTasks.map(prepareTask),
                 removed: removedTasks
             }
         });
@@ -53,26 +58,26 @@ export class TaskTable extends React.Component {
         // TODO: get an intervalId to remove the interval when countdown reaches 0
         // TODO: do not apply an interval for big duration when a lot of days etc
 
-        setInterval(() => {
-            const {
-                tasks: { activeAndCompleted, removed }
-            } = this.state;
+        // setInterval(() => {
+        //     const {
+        //         tasks: { activeAndCompleted, removed }
+        //     } = this.state;
 
-            this.setState({
-                tasks: {
-                    removed,
-                    activeAndCompleted: activeAndCompleted.map(t => {
-                        if (t.duration.seconds() > 0) {
-                            t.duration = t.duration.subtract(1, 'second');
-                        } else {
-                            t.duration = moment.duration(0);
-                        }
+        //     this.setState({
+        //         tasks: {
+        //             removed,
+        //             activeAndCompleted: activeAndCompleted.map(t => {
+        //                 if (t.duration.seconds() > 0) {
+        //                     t.duration = t.duration.subtract(1, 'second');
+        //                 } else {
+        //                     t.duration = moment.duration(0);
+        //                 }
 
-                        return t;
-                    })
-                }
-            });
-        }, 1000);
+        //                 return t;
+        //             })
+        //         }
+        //     });
+        // }, 1000);
     }
 
     hasTasks() {
@@ -98,48 +103,90 @@ export class TaskTable extends React.Component {
         });
     };
 
+    openAddTaskModal = () => {
+        this.setState({
+            isOpened: true
+        });
+    };
+    handleAddTask = (task: Task) => {
+        const { tasks } = this.state;
+        this.setState({
+            isOpened: false,
+            tasks: {
+                ...tasks,
+                activeAndCompleted: [
+                    prepareTask(task),
+                    ...tasks.activeAndCompleted
+                ]
+            }
+        });
+    };
+    handleCancel = () => {
+        this.setState({
+            isOpened: false
+        });
+    };
+
     render() {
         const {
+            isOpened,
             tasks: { activeAndCompleted }
         } = this.state;
 
         return (
-            <TableContainer component={Paper}>
-                <Table size="small">
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Name</TableCell>
-                            <TableCell align="center">Priority</TableCell>
-                            <TableCell align="center">Added</TableCell>
-                            <TableCell align="center">
-                                Time to complete
-                            </TableCell>
-                            <TableCell align="center">Status</TableCell>
-                            <TableCell align="center">Action</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {!this.hasTasks() &&
-                            [...Array(5)].map((_, i) => (
-                                <TableRow key={i}>
-                                    <TableCell colSpan={6}>
-                                        <Skeleton variant="text" />
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        {this.hasTasks() &&
-                            activeAndCompleted.map(t => {
-                                return (
-                                    <TableTaskRow
-                                        key={t.name}
-                                        task={t}
-                                        remove={this.onTaskRemoving}
-                                    ></TableTaskRow>
-                                );
-                            })}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+            <>
+                <Toolbar>
+                    <Typography variant="h6">Tasks</Typography>
+                    <Fab
+                        color="primary"
+                        size="small"
+                        onClick={this.openAddTaskModal}
+                    >
+                        <AddIcon />
+                    </Fab>
+                </Toolbar>
+                <TableContainer component={Paper}>
+                    <Table size="small">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Name</TableCell>
+                                <TableCell align="center">Priority</TableCell>
+                                <TableCell align="center">Added</TableCell>
+                                <TableCell align="center">
+                                    Time to complete
+                                </TableCell>
+                                <TableCell align="center">Status</TableCell>
+                                <TableCell align="center">Action</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {!this.hasTasks() &&
+                                [...Array(5)].map((_, i) => (
+                                    <TableRow key={i}>
+                                        <TableCell colSpan={6}>
+                                            <Skeleton variant="text" />
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            {this.hasTasks() &&
+                                activeAndCompleted.map(t => {
+                                    return (
+                                        <TableTaskRow
+                                            key={t.name}
+                                            task={t}
+                                            remove={this.onTaskRemoving}
+                                        ></TableTaskRow>
+                                    );
+                                })}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+                <AddTaskModal
+                    isOpened={isOpened}
+                    addHandler={this.handleAddTask}
+                    cancelHandler={this.handleCancel}
+                />
+            </>
         );
     }
 }

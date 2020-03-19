@@ -3,7 +3,6 @@ import { Task } from '../models/Task';
 import {
     Dialog,
     DialogTitle,
-    DialogContentText,
     DialogContent,
     DialogActions,
     Button,
@@ -12,6 +11,8 @@ import {
     MenuItem
 } from '@material-ui/core';
 import { TransitionProps } from '@material-ui/core/transitions/transition';
+import moment from 'moment';
+import { TaskStatus } from '../models/TaskStatus';
 
 type Props = {
     isOpened: boolean;
@@ -27,15 +28,32 @@ const Transition = React.forwardRef<unknown, TransitionProps>(
 
 const priorities = [1, 2, 3];
 
+const initTask = () => {
+    return {
+        name: '',
+        description: '',
+        priority: 1,
+        completeAt: moment().format('YYYY-MM-DDThh:mm')
+    };
+};
+
 export const AddTaskModal: React.FC<Props> = ({
     isOpened,
     cancelHandler,
     addHandler
 }) => {
-    const [task, setTask] = useState<Task>({ priority: 1 } as Task);
+    const [task, setTask] = useState<Task>(initTask() as Task);
+
+    const handleEnter = () => {
+        setTask(initTask() as Task);
+    };
 
     const handleAdd = () => {
-        addHandler(task);
+        addHandler({
+            ...task,
+            createdAt: moment().format(),
+            status: TaskStatus.Active
+        });
     };
     const handleClose = () => {
         cancelHandler();
@@ -79,11 +97,11 @@ export const AddTaskModal: React.FC<Props> = ({
 
     return (
         <Dialog
+            onEnter={handleEnter}
             open={isOpened}
             onClose={handleClose}
             aria-labelledby="form-dialog-title"
             TransitionComponent={Transition}
-            keepMounted
         >
             <DialogTitle id="form-dialog-title">Add new task</DialogTitle>
             <DialogContent>
@@ -95,6 +113,7 @@ export const AddTaskModal: React.FC<Props> = ({
                     label="Name"
                     fullWidth
                     onChange={onNameChanged}
+                    value={task.name}
                 />
                 <TextField
                     variant="outlined"
@@ -105,7 +124,8 @@ export const AddTaskModal: React.FC<Props> = ({
                     fullWidth
                     rows="4"
                     onChange={onDescriptionChanged}
-                    />
+                    value={task.description}
+                />
                 <TextField
                     variant="outlined"
                     select
@@ -115,7 +135,7 @@ export const AddTaskModal: React.FC<Props> = ({
                     fullWidth
                     onChange={onPriorityChanged}
                     value={task.priority}
-                    >
+                >
                     {priorities.map(p => (
                         <MenuItem key={p} value={p}>
                             {p}
@@ -123,11 +143,12 @@ export const AddTaskModal: React.FC<Props> = ({
                     ))}
                 </TextField>
                 <TextField
-                    type="time"
+                    type="datetime-local"
                     margin="dense"
                     id="completeTime"
                     label="Time to complete"
-                    defaultValue="12:30"
+                    fullWidth
+                    value={task.completeAt}
                     InputLabelProps={{
                         shrink: true
                     }}
