@@ -33,7 +33,8 @@ const initTask = () => {
         name: '',
         description: '',
         priority: 1,
-        completeAt: moment().format('YYYY-MM-DDThh:mm')
+        completeAt: moment().format('YYYY-MM-DDThh:mm'),
+        status: TaskStatus.Adding
     };
 };
 
@@ -51,8 +52,7 @@ export const AddTaskModal: React.FC<Props> = ({
     const handleAdd = () => {
         addHandler({
             ...task,
-            createdAt: moment().format(),
-            status: TaskStatus.Active
+            createdAt: moment().format()
         });
     };
     const handleClose = () => {

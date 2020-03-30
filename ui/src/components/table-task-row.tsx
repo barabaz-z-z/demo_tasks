@@ -1,6 +1,12 @@
 import React from 'react';
 import moment from 'moment';
-import { TableRow, TableCell, Chip, Button } from '@material-ui/core';
+import {
+    TableRow,
+    TableCell,
+    Chip,
+    Button,
+    CircularProgress
+} from '@material-ui/core';
 import { Task } from '../models/Task';
 import { TaskStatus } from '../models/TaskStatus';
 
@@ -53,6 +59,7 @@ export class TableTaskRow extends React.Component<Props, State> {
                     <Chip label={TaskStatus[task.status]} />
                 </TableCell>
                 <TableCell align="center">
+                    {task.status === TaskStatus.Adding && <CircularProgress />}
                     {task.status === TaskStatus.Completed && (
                         <Button onClick={this.removeTask}>Remove</Button>
                     )}

@@ -110,16 +110,70 @@ export class TaskTable extends React.Component {
     };
     handleAddTask = (task: Task) => {
         const { tasks } = this.state;
+        const preparedTask = prepareTask(task);
+
+        const maxId = tasks.activeAndCompleted.sort(
+            (t1, t2) => t2.id - t1.id
+        )[0].id;
+        const newId = maxId + 1;
+
         this.setState({
             isOpened: false,
             tasks: {
                 ...tasks,
                 activeAndCompleted: [
-                    prepareTask(task),
+                    { ...preparedTask, id: newId },
                     ...tasks.activeAndCompleted
                 ]
             }
         });
+
+        const options: RequestInit = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(preparedTask)
+        };
+
+        fetch('http://localhost:5000/api/tasks', options)
+            .then(async response => {
+                const { tasks } = this.state;
+                const data = await response.json();
+
+                const preparedTasks = tasks.activeAndCompleted.map(t =>
+                    t.id === newId
+                        ? {
+                              ...t,
+                              id: data.id,
+                              status: TaskStatus.Active
+                          }
+                        : t
+                );
+
+                this.setState({
+                    isOpened: false,
+                    tasks: {
+                        ...tasks,
+                        activeAndCompleted: [...preparedTasks]
+                    }
+                });
+            })
+            .catch(error => {
+                const { tasks } = this.state;
+
+                console.log(error);
+
+                this.setState({
+                    ...this.state,
+                    tasks: {
+                        ...tasks,
+                        activeAndCompleted: tasks.activeAndCompleted.filter(
+                            t => t.id !== newId
+                        )
+                    }
+                });
+            });
     };
     handleCancel = () => {
         this.setState({
@@ -172,7 +226,7 @@ export class TaskTable extends React.Component {
                                 activeAndCompleted.map(t => {
                                     return (
                                         <TableTaskRow
-                                            key={t.name}
+                                            key={t.id}
                                             task={t}
                                             remove={this.onTaskRemoving}
                                         ></TableTaskRow>
