@@ -52,7 +52,9 @@ namespace Tasks.API.Controllers
             var result = await response.Content.ReadAsStringAsync();
             var id = Deserialize<int>(result);
 
-            return CreatedAtAction(nameof(GetById), new { Id = id }, newTask);
+            newTask.Id = id;
+
+            return CreatedAtAction(nameof(GetById), new { Id = newTask.Id }, newTask);
         }
 
         [HttpDelete("{id}")]
