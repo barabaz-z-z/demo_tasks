@@ -60,29 +60,3 @@ Response body:
 ```
 "{{sResult}}"
 ```
-
-## GET /external/teacher/wordcard
-
-Response Code: 200 - OK
-
-Response body:
-```
-{
-  "isOk": true,
-  "data": {
-    "[1..100]": {
-      "id": "{{random.uuid()}}",
-      "word": "{{random.words(1)}}",
-      "transcription": "{{random.words(1)}}",
-      "mediaId": null,
-      "synonyms": [],
-      "examples": {
-        "[2..4]":"{{random.words(10)}}"
-      },
-      "definitions": {
-        "[2..3]":"{{random.words(2)}}"
-      }
-    }
-  }
-}
-```
